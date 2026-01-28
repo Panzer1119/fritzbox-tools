@@ -68,12 +68,12 @@ def _parse_timestamp(date_str: str, time_str: str) -> datetime:
 
 class FritzClient:
     def __init__(
-        self,
-        base_url: str,
-        username: str,
-        password: str,
-        timeout: float = 10.0,
-        session: requests.Session | None = None,
+            self,
+            base_url: str,
+            username: str,
+            password: str,
+            timeout: float = 10.0,
+            session: requests.Session | None = None,
     ) -> None:
         self.base_url = base_url.rstrip("/")
         self.username = username

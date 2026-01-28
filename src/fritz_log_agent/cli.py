@@ -15,14 +15,12 @@ from dotenv import load_dotenv
 
 from .client import FritzClient, LogEntry
 
-
-
 LOGGER = logging.getLogger("fritz_log_agent")
 
 
 def _read_credentials(
-    username: str | None,
-    password: str | None,
+        username: str | None,
+        password: str | None,
 ) -> tuple[str, str]:
     username = username or os.environ.get("FRITZBOX_USERNAME")
     password = password or os.environ.get("FRITZBOX_PASSWORD")
