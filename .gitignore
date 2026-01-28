@@ -2,6 +2,9 @@
 
 .idea/
 credentials
+src/fritz_log_agent/json/
+src/fritz_log_agent/txt/
+src/fritz_log_agent/agent_state.json
 
 ### JetBrains template
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio, WebStorm and Rider
