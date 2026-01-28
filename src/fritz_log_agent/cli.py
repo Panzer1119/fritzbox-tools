@@ -45,7 +45,10 @@ def _emit_stdout(entries: Iterable[LogEntry], fmt: str) -> None:
 
 
 def _run_once(client: FritzClient, args: argparse.Namespace) -> int:
-    entries, _payload = client.fetch_log_with_retry()
+    entries, payload = client.fetch_log_with_retry()
+    if args.print_payload:
+        print(json.dumps(payload, ensure_ascii=True))
+        return 0
     entries_sorted = sorted(entries, key=lambda entry: entry.timestamp)
     _emit_stdout(entries_sorted, args.stdout_format)
     return 0
@@ -97,6 +100,11 @@ def build_parser() -> argparse.ArgumentParser:
         choices=["jsonl", "text"],
         help="Emit entries to stdout in this format",
     )
+    parser.add_argument(
+        "--print-payload",
+        action="store_true",
+        help="Print the full JSON response once (one-shot mode only)",
+    )
     parser.add_argument("--agent", action="store_true", help="Run continuously")
     parser.add_argument(
         "--interval",
@@ -112,6 +120,9 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+
+    if args.agent and args.print_payload:
+        parser.error("--print-payload is only supported in one-shot mode")
 
     logging.basicConfig(
         level=logging.DEBUG if args.debug else logging.INFO,
