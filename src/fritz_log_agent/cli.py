@@ -11,6 +11,8 @@ from datetime import datetime
 from getpass import getpass
 from typing import Iterable
 
+from dotenv import load_dotenv
+
 from .client import FritzClient, LogEntry
 
 
@@ -118,6 +120,7 @@ def main(argv: list[str] | None = None) -> int:
         format="%(levelname)s %(message)s",
     )
 
+    load_dotenv()
     username, password = _read_credentials(args.username, args.password)
 
     client = FritzClient(
