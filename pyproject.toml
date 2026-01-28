@@ -1,8 +1,11 @@
 [project]
-name = "2c8365bfa6caa7c7f8dd915ecc8dde5b"
+name = "fritz-log-agent"
 version = "0.1.0"
-description = "Add your description here"
-requires-python = ">=3.14"
+description = "Download Fritz!Box logs and stream them to stdout."
+requires-python = ">=3.10"
 dependencies = [
-    "requests>=2.32.5",
+    "requests>=2.31",
 ]
+
+[project.scripts]
+fritz-log-agent = "fritz_log_agent.cli:main"
