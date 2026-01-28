@@ -5,6 +5,7 @@ description = "Download Fritz!Box logs and stream them to stdout."
 requires-python = ">=3.10"
 dependencies = [
     "requests>=2.31",
+    "python-dotenv>=1.0",
 ]
 
 [project.scripts]
