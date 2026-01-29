@@ -1,6 +1,6 @@
 # Fritz!Box Log Agent
 
-Stream Fritz!Box logs to stdout in jsonl or text format. Supports a one-shot run and an agent mode that polls and avoids duplicates.
+Stream Fritz!Box logs in jsonl or text format. Supports a one-shot run and an agent mode that polls and avoids duplicates.
 
 ## Install
 
@@ -28,6 +28,12 @@ Write output to a file:
 fritz-log-agent --agent --output-format text --output /tmp/fritz.log
 ```
 
+Print the raw payload once (one-shot only):
+
+```bash
+fritz-log-agent --print-payload --output /tmp/fritz-payload.json
+```
+
 Credentials can be passed via arguments or environment variables:
 
 ```bash
@@ -38,8 +44,13 @@ fritz-log-agent --agent
 
 ## Options
 
+- `--base-url`: Fritz!Box base URL (default: `http://fritz.box`).
+- `--username`: Fritz!Box username (prompted if missing).
+- `--password`: Fritz!Box password (prompted if missing).
 - `--output-format` `jsonl|text`: output format for entries.
-- `--output` `PATH|-|stdout`: output destination.
+- `--output` `PATH|-|stdout`: output destination (append mode for entries).
+- `--print-payload`: print the full JSON response once (one-shot only).
 - `--agent`: run continuously.
 - `--interval`: polling interval in seconds.
-- `--state-file`: path to a small state file used for de-duplication.
+- `--timeout`: HTTP timeout in seconds.
+- `--debug`: enable debug logging.
