@@ -36,13 +36,36 @@ def _read_credentials(
     return username, password
 
 
-def _emit_stdout(entries: Iterable[LogEntry], fmt: str) -> None:
+def _entries_to_lines(entries: Iterable[LogEntry], fmt: str) -> Iterable[str]:
     if fmt == "text":
         for entry in entries:
-            print(entry.to_text_line())
+            yield entry.to_text_line()
     else:
         for entry in entries:
-            print(json.dumps(entry.to_json(), ensure_ascii=True))
+            yield json.dumps(entry.to_json(), ensure_ascii=True)
+
+
+def _emit_output(lines: Iterable[str], output: str) -> None:
+    normalized = output.strip().lower()
+    if normalized in {"-", "stdout"}:
+        for line in lines:
+            print(line)
+        return
+
+    with open(output, "a", encoding="utf-8") as handle:
+        for line in lines:
+            handle.write(f"{line}\n")
+
+
+def _emit_payload(payload: dict, output: str) -> None:
+    line = json.dumps(payload, ensure_ascii=True)
+    normalized = output.strip().lower()
+    if normalized in {"-", "stdout"}:
+        print(line)
+        return
+
+    with open(output, "w", encoding="utf-8") as handle:
+        handle.write(f"{line}\n")
 
 
 _GROUPED_SUFFIX_RE = re.compile(
@@ -82,10 +105,10 @@ def _normalize_agent_entry(entry: LogEntry) -> LogEntry:
 def _run_once(client: FritzClient, args: argparse.Namespace) -> int:
     entries, payload = client.fetch_log_with_retry()
     if args.print_payload:
-        print(json.dumps(payload, ensure_ascii=True))
+        _emit_payload(payload, args.output)
         return 0
     entries_sorted = sorted(entries, key=lambda entry: entry.timestamp)
-    _emit_stdout(entries_sorted, args.stdout_format)
+    _emit_output(_entries_to_lines(entries_sorted, args.output_format), args.output)
     return 0
 
 
@@ -116,7 +139,7 @@ def _run_agent(client: FritzClient, args: argparse.Namespace) -> int:
                     new_entries.append(normalized_entry)
 
         if new_entries:
-            _emit_stdout(new_entries, args.stdout_format)
+            _emit_output(_entries_to_lines(new_entries, args.output_format), args.output)
 
         time.sleep(args.interval)
 
@@ -131,10 +154,15 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--username", help="Fritz!Box username")
     parser.add_argument("--password", help="Fritz!Box password")
     parser.add_argument(
-        "--stdout-format",
+        "--output-format",
         default="jsonl",
         choices=["jsonl", "text"],
-        help="Emit entries to stdout in this format",
+        help="Emit entries in this format",
+    )
+    parser.add_argument(
+        "--output",
+        default="-",
+        help="Write output to a file path or stdout ('-' or 'stdout')",
     )
     parser.add_argument(
         "--print-payload",
