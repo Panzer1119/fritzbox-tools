@@ -6,6 +6,7 @@ import argparse
 import json
 import logging
 import os
+import re
 import time
 from datetime import datetime
 from getpass import getpass
@@ -44,6 +45,40 @@ def _emit_stdout(entries: Iterable[LogEntry], fmt: str) -> None:
             print(json.dumps(entry.to_json(), ensure_ascii=True))
 
 
+_GROUPED_SUFFIX_RE = re.compile(
+    r"\s*\[(\d+)\s+Meldung(?:en)?\s+seit\s+(\d{2}\.\d{2}\.\d{2})\s+(\d{2}:\d{2}:\d{2})\]\s*$"
+)
+
+
+def _parse_grouped_suffix(message: str) -> tuple[str, int | None, datetime | None]:
+    match = _GROUPED_SUFFIX_RE.search(message)
+    if not match:
+        return message, None, None
+    count = int(match.group(1))
+    date_str = match.group(2)
+    time_str = match.group(3)
+    try:
+        since = datetime.strptime(f"{date_str} {time_str}", "%d.%m.%y %H:%M:%S")
+    except ValueError:
+        return message, None, None
+    cleaned = message[: match.start()].rstrip()
+    return cleaned, count, since
+
+
+def _normalize_agent_entry(entry: LogEntry) -> LogEntry:
+    message, count, since = _parse_grouped_suffix(entry.message)
+    if count is None and since is None:
+        return entry
+    return LogEntry(
+        timestamp=entry.timestamp,
+        group=entry.group,
+        entry_id=entry.entry_id,
+        message=message,
+        group_count=count,
+        group_since=since,
+    )
+
+
 def _run_once(client: FritzClient, args: argparse.Namespace) -> int:
     entries, payload = client.fetch_log_with_retry()
     if args.print_payload:
@@ -69,15 +104,16 @@ def _run_agent(client: FritzClient, args: argparse.Namespace) -> int:
         entries_sorted = sorted(entries, key=lambda entry: entry.timestamp)
         new_entries: list[LogEntry] = []
         for entry in entries_sorted:
-            if entry.timestamp > last_timestamp:
-                last_timestamp = entry.timestamp
-                last_signatures = {_entry_signature(entry)}
-                new_entries.append(entry)
-            elif entry.timestamp == last_timestamp:
-                signature = _entry_signature(entry)
+            normalized_entry = _normalize_agent_entry(entry)
+            if normalized_entry.timestamp > last_timestamp:
+                last_timestamp = normalized_entry.timestamp
+                last_signatures = {_entry_signature(normalized_entry)}
+                new_entries.append(normalized_entry)
+            elif normalized_entry.timestamp == last_timestamp:
+                signature = _entry_signature(normalized_entry)
                 if signature not in last_signatures:
                     last_signatures.add(signature)
-                    new_entries.append(entry)
+                    new_entries.append(normalized_entry)
 
         if new_entries:
             _emit_stdout(new_entries, args.stdout_format)

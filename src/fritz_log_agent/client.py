@@ -18,6 +18,8 @@ class LogEntry:
     group: str
     entry_id: str
     message: str
+    group_count: int | None = None
+    group_since: datetime | None = None
 
     def to_text_line(self) -> str:
         date_str = self.timestamp.strftime("%d.%m.%y")
@@ -25,12 +27,17 @@ class LogEntry:
         return f"{date_str} {time_str} {self.group} {self.entry_id} {self.message}"
 
     def to_json(self) -> dict:
-        return {
+        payload = {
             "timestamp": self.timestamp.strftime("%Y-%m-%dT%H:%M:%S"),
             "group": self.group,
             "id": self.entry_id,
             "msg": self.message,
         }
+        if self.group_count is not None:
+            payload["group_count"] = self.group_count
+        if self.group_since is not None:
+            payload["group_since"] = self.group_since.strftime("%Y-%m-%dT%H:%M:%S")
+        return payload
 
 
 def _sanitize_password(password: str) -> str:
