@@ -27,8 +27,14 @@ class LogEntry:
         return f"{date_str} {time_str} {self.group} {self.entry_id} {self.message}"
 
     def to_json(self) -> dict:
+        def _iso_with_tz(value: datetime) -> str:
+            if value.tzinfo is None:
+                local_tz = datetime.now().astimezone().tzinfo
+                value = value.replace(tzinfo=local_tz)
+            return value.isoformat()
+
         payload = {
-            "timestamp": self.timestamp.strftime("%Y-%m-%dT%H:%M:%S"),
+            "timestamp": _iso_with_tz(self.timestamp),
             "group": self.group,
             "id": self.entry_id,
             "msg": self.message,
@@ -36,7 +42,7 @@ class LogEntry:
         if self.group_count is not None:
             payload["group_count"] = self.group_count
         if self.group_since is not None:
-            payload["group_since"] = self.group_since.strftime("%Y-%m-%dT%H:%M:%S")
+            payload["group_since"] = _iso_with_tz(self.group_since)
         return payload
 
 
