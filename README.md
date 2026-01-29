@@ -13,13 +13,19 @@ python -m pip install -e .
 One-shot (prints current log entries):
 
 ```bash
-fritz-log-agent --base-url http://fritz.box --username alice --stdout-format jsonl
+fritz-log-agent --base-url http://fritz.box --username alice --output-format jsonl
 ```
 
 Agent mode (poll every 60s and dedupe):
 
 ```bash
-fritz-log-agent --agent --interval 60 --stdout-format jsonl
+fritz-log-agent --agent --interval 60 --output-format jsonl
+```
+
+Write output to a file:
+
+```bash
+fritz-log-agent --agent --output-format text --output /tmp/fritz.log
 ```
 
 Credentials can be passed via arguments or environment variables:
@@ -32,7 +38,8 @@ fritz-log-agent --agent
 
 ## Options
 
-- `--stdout-format` `jsonl|text`: output format to stdout.
+- `--output-format` `jsonl|text`: output format for entries.
+- `--output` `PATH|-|stdout`: output destination.
 - `--agent`: run continuously.
 - `--interval`: polling interval in seconds.
 - `--state-file`: path to a small state file used for de-duplication.
